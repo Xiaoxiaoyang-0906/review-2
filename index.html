@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>會考社會科複習站</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700;900&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F3EC;
+    --bg-line: rgba(33,38,47,0.035);
+    --ink:#21262F;
+    --ink-soft:#5B6472;
+    --card:#FFFFFF;
+    --hist:#7A3B2E;   --hist-soft:#F1E3DD;
+    --geo:#1F5C3A;    --geo-soft:#DDEDE2;
+    --civ:#1F4A7A;    --civ-soft:#DEE8F5;
+    --gold:#A9791C;   --gold-soft:#FBF0D6;
+    --red:#B23B3B;    --red-soft:#FBE7E7;
+    --green-ok:#2E7D4F; --green-soft:#E4F3EA;
+    --accent: var(--hist);
+    --accent-soft: var(--hist-soft);
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(33,38,47,0.06), 0 4px 14px rgba(33,38,47,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(180deg, var(--bg-line) 0px, var(--bg-line) 1px, transparent 1px, transparent 34px),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  h1,h2,h3,.serif{ font-family:"Noto Serif TC","Noto Sans TC",serif; }
+  button{ font-family:inherit; cursor:pointer; }
+  ::selection{ background: var(--gold-soft); }
+
+  /* ---------- App shell ---------- */
+  #app{ max-width:1180px; margin:0 auto; padding:18px 16px 60px 16px; }
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:14px 18px; background:var(--card); border-radius:14px; box-shadow:var(--shadow);
+    margin-bottom:16px; flex-wrap:wrap;
+  }
+  .topbar .brand{ display:flex; align-items:center; gap:10px; }
+  .topbar .brand .mark{
+    width:38px; height:38px; border-radius:9px; background:var(--ink); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:19px; font-weight:700;
+    font-family:"Noto Serif TC",serif; flex-shrink:0;
+  }
+  .topbar .brand .ttl{ font-size:17px; font-weight:700; line-height:1.2; }
+  .topbar .brand .sub{ font-size:11px; color:var(--ink-soft); }
+  .progress-dash{ display:flex; gap:14px; flex-wrap:wrap; }
+  .pd-item{ display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink-soft); }
+  .pd-item .dots{ display:flex; gap:3px; }
+  .pd-dot{ width:8px; height:8px; border-radius:50%; background:#E4E0D4; }
+  .pd-dot.on{ background: var(--dotcolor,#999); }
+
+  /* ---------- Layout: rail + main ---------- */
+  .layout{ display:flex; gap:18px; align-items:flex-start; }
+  .rail{
+    width:200px; flex-shrink:0; display:flex; flex-direction:column; gap:10px;
+    position:sticky; top:16px;
+  }
+  .tab{
+    display:flex; align-items:center; gap:10px; padding:13px 14px;
+    background:var(--card); border-radius:8px 14px 14px 8px; border-left:6px solid transparent;
+    box-shadow:var(--shadow); font-size:14px; font-weight:700; color:var(--ink-soft);
+    transform:translateX(0); transition:transform .15s ease;
+    position:relative;
+  }
+  .tab .ic{ font-size:18px; }
+  .tab.active{ transform:translateX(6px); color:var(--ink); }
+  .tab[data-subj="history"].active{ border-color:var(--hist); background:var(--hist-soft); }
+  .tab[data-subj="geography"].active{ border-color:var(--geo); background:var(--geo-soft); }
+  .tab[data-subj="civics"].active{ border-color:var(--civ); background:var(--civ-soft); }
+  .tab .badge{
+    margin-left:auto; font-size:10px; padding:2px 6px; border-radius:8px; background:#EEEAE0; color:var(--ink-soft);
+    font-weight:700;
+  }
+  .tab.active .badge{ background:rgba(255,255,255,0.65); }
+
+  .rail-panel{ background:var(--card); border-radius:12px; box-shadow:var(--shadow); padding:12px; }
+  .rail-panel h4{ margin:2px 0 8px 0; font-size:11.5px; color:var(--ink-soft); font-weight:700; }
+  .level-switch{ display:flex; background:#EFEBE0; border-radius:999px; padding:3px; margin-bottom:10px; }
+  .level-switch button{
+    flex:1; border:none; background:transparent; padding:7px 0; font-size:12.5px; font-weight:700;
+    border-radius:999px; color:var(--ink-soft);
+  }
+  .level-switch button.active{ background:var(--ink); color:#fff; }
+  .mode-switch{ display:flex; flex-direction:column; gap:6px; }
+  .mode-switch button{
+    text-align:left; border:1.5px solid #E7E2D4; background:#fff; padding:9px 10px; border-radius:8px;
+    font-size:12.5px; font-weight:700; color:var(--ink-soft); display:flex; align-items:center; gap:8px;
+  }
+  .mode-switch button.active{ border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+  .challenge-btn{
+    margin-top:8px; width:100%; border:none; border-radius:8px; padding:10px; font-size:12.5px; font-weight:700;
+    background:var(--ink); color:#fff;
+  }
+
+  .main{ flex:1; min-width:0; }
+
+  /* ---------- Home ---------- */
+  .home-hero{
+    background:var(--card); border-radius:16px; box-shadow:var(--shadow); padding:26px 26px 22px 26px; margin-bottom:16px;
+  }
+  .home-hero h1{ font-size:24px; margin:0 0 6px 0; }
+  .home-hero p{ color:var(--ink-soft); font-size:13.5px; line-height:1.7; max-width:62ch; margin:0 0 14px 0; }
+  .home-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .home-card{
+    border-radius:12px; padding:14px; color:#fff; cursor:pointer; border:none; text-align:left;
+    display:flex; flex-direction:column; gap:4px; transition:transform .12s ease;
+  }
+  .home-card:hover{ transform:translateY(-2px); }
+  .home-card.hist{ background:linear-gradient(135deg,var(--hist),#5a2b21); }
+  .home-card.geo{ background:linear-gradient(135deg,var(--geo),#153f28); }
+  .home-card.civ{ background:linear-gradient(135deg,var(--civ),#153154); }
+  .home-card .hc-ic{ font-size:22px; }
+  .home-card .hc-ttl{ font-size:15px; font-weight:700; }
+  .home-card .hc-desc{ font-size:11.5px; opacity:.9; }
+
+  /* ---------- Content cards (review) ---------- */
+  .section-head{
+    display:flex; align-items:center; justify-content:space-between; margin:4px 0 12px 0; flex-wrap:wrap; gap:8px;
+  }
+  .section-head h2{ font-size:19px; margin:0; }
+  .section-head .tag{
+    font-size:11px; font-weight:700; padding:3px 10px; border-radius:999px; color:#fff; background:var(--accent);
+  }
+  .topic{
+    background:var(--card); border-radius:12px; box-shadow:var(--shadow); margin-bottom:10px; overflow:hidden;
+  }
+  .topic summary{
+    list-style:none; cursor:pointer; padding:13px 16px; display:flex; align-items:center; gap:10px;
+    font-weight:700; font-size:14px; border-left:5px solid var(--accent);
+  }
+  .topic summary::-webkit-details-marker{ display:none; }
+  .topic summary .num{
+    width:22px; height:22px; border-radius:6px; background:var(--accent-soft); color:var(--accent);
+    display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:800; flex-shrink:0;
+  }
+  .topic summary .chev{ margin-left:auto; color:var(--ink-soft); transition:transform .15s ease; font-size:12px;}
+  .topic[open] summary .chev{ transform:rotate(180deg); }
+  .topic .body{ padding:2px 18px 16px 41px; font-size:13px; line-height:1.75; color:var(--ink); }
+  .topic .body table{ width:100%; border-collapse:collapse; margin:8px 0 12px 0; font-size:12.3px; }
+  .topic .body th,.topic .body td{ border:1px solid #E4E0D2; padding:6px 8px; text-align:left; vertical-align:top; }
+  .topic .body th{ background:var(--accent-soft); color:var(--accent); font-weight:700; }
+  .topic .body ul{ margin:4px 0 8px 0; padding-left:19px; }
+  .topic .body li{ margin:3px 0; }
+  .callout{ border-radius:8px; padding:9px 12px; margin:8px 0; font-size:12.3px; }
+  .callout.tip{ background:var(--gold-soft); border:1px solid #E6D18C; }
+  .callout.tip b{ color:var(--gold); }
+  .callout.warn{ background:var(--red-soft); border:1px solid #EAB3B3; }
+  .callout.warn b{ color:var(--red); }
+  .callout.fix{ background:#F1E7FA; border:1px solid #D3B5EC; }
+  .callout.fix b{ color:#6A3B94; }
+
+  /* ---------- Quiz ---------- */
+  .quiz-wrap{ background:var(--card); border-radius:14px; box-shadow:var(--shadow); padding:22px; }
+  .quiz-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;}
+  .quiz-top .qcount{ font-size:12px; color:var(--ink-soft); font-weight:700; }
+  .bubble-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  .bubble{
+    width:22px; height:22px; border-radius:50%; border:2px solid #DCD6C6; display:flex; align-items:center; justify-content:center;
+    font-size:10px; font-weight:700; color:var(--ink-soft); background:#fff;
+  }
+  .bubble.current{ border-color:var(--accent); color:var(--accent); }
+  .bubble.correct{ background:var(--green-ok); border-color:var(--green-ok); color:#fff; }
+  .bubble.wrong{ background:var(--red); border-color:var(--red); color:#fff; }
+  .q-card .q-level{
+    display:inline-block; font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:999px;
+    background:var(--accent-soft); color:var(--accent); margin-bottom:10px;
+  }
+  .q-card h3{ font-size:16.5px; margin:0 0 16px 0; line-height:1.6; }
+  .opt-list{ display:flex; flex-direction:column; gap:9px; margin-bottom:6px; }
+  .opt{
+    display:flex; align-items:center; gap:10px; text-align:left; padding:11px 14px; border-radius:9px;
+    border:1.6px solid #E4E0D2; background:#fff; font-size:13.5px; color:var(--ink);
+  }
+  .opt .letter{
+    width:22px; height:22px; border-radius:50%; border:1.6px solid #C9C3B2; display:flex; align-items:center;
+    justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; color:var(--ink-soft);
+  }
+  .opt:not(.locked):hover{ border-color:var(--accent); }
+  .opt.locked{ cursor:default; }
+  .opt.correct-answer{ border-color:var(--green-ok); background:var(--green-soft); }
+  .opt.correct-answer .letter{ background:var(--green-ok); border-color:var(--green-ok); color:#fff; }
+  .opt.wrong-answer{ border-color:var(--red); background:var(--red-soft); }
+  .opt.wrong-answer .letter{ background:var(--red); border-color:var(--red); color:#fff; }
+  .explain-box{
+    margin-top:14px; padding:12px 14px; border-radius:9px; background:#F7F5EE; border:1px dashed #D8D2C0;
+    font-size:12.6px; line-height:1.7; color:var(--ink-soft);
+  }
+  .explain-box b{ color:var(--ink); }
+  .quiz-actions{ display:flex; justify-content:flex-end; margin-top:16px; }
+  .btn-primary{
+    border:none; background:var(--ink); color:#fff; padding:10px 20px; border-radius:8px; font-size:13px; font-weight:700;
+  }
+  .btn-primary:disabled{ opacity:.35; }
+  .btn-ghost{
+    border:1.5px solid #DDD7C7; background:transparent; color:var(--ink-soft); padding:9px 18px; border-radius:8px;
+    font-size:13px; font-weight:700;
+  }
+  .quiz-result{ text-align:center; padding:20px 10px; }
+  .quiz-result .score{ font-family:"Noto Serif TC",serif; font-size:46px; font-weight:900; color:var(--accent); margin:6px 0; }
+  .quiz-result .msg{ font-size:14px; color:var(--ink-soft); margin-bottom:18px; }
+  .result-actions{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+  footer{ text-align:center; font-size:11px; color:var(--ink-soft); margin-top:26px; }
+
+  @media (max-width:820px){
+    .layout{ flex-direction:column; }
+    .rail{ width:100%; flex-direction:row; flex-wrap:wrap; position:static; }
+    .tab{ flex:1 1 30%; border-radius:10px; border-left:none; border-bottom:5px solid transparent; }
+    .tab.active{ transform:none; }
+    .rail-panel{ width:100%; order:3; }
+    .home-grid{ grid-template-columns:1fr; }
+    .topic .body{ padding-left:16px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============================================================
+   內容資料：歷史 / 地理 / 公民 × 基礎 / 進階
+   ============================================================ */
+const CONTENT = {
+history: {
+  label:"歷史", icon:"📜", key:"history",
+  basic:[
+    {t:"史前時代分期", h:`
+      <table><tr><th>時期</th><th>代表文化</th><th>年代</th><th>特色</th></tr>
+      <tr><td>舊石器</td><td>長濱文化（臺東）</td><td>約5萬〜5千年前</td><td>打製石器、採集狩獵、居洞穴</td></tr>
+      <tr><td>新石器</td><td>大坌坑→圓山→卑南文化</td><td>約7千〜2千年前</td><td>磨製石器、製陶、定居農耕</td></tr>
+      <tr><td>金屬器</td><td>十三行文化（八里）</td><td>約2千〜4百年前</td><td>使用鐵器、對外貿易</td></tr></table>
+      <div class="callout tip">🔑必考：<b>長濱＝最早、打製石器；十三行＝最晚、鐵器、有對外貿易。</b></div>`},
+    {t:"臺灣原住民族", h:`
+      <ul><li>屬於「<b>南島語族</b>」的一支，語言文化與太平洋、印度洋島嶼有共通性。</li>
+      <li>政府認定16族，如阿美、泰雅、排灣、布農、卑南、達悟等。</li>
+      <li>多數行<b>父系社會</b>（泰雅、布農），部分行<b>母系社會</b>（阿美、卑南），排灣、魯凱有<b>貴族與平民</b>階級制。</li></ul>
+      <div class="callout warn">⚠️易混淆：<b>阿美族＝母系＋年齡階級；達悟族＝唯一分布離島（蘭嶼）、無獵頭與階級。</b></div>`},
+    {t:"大航海時代（荷西時期）", h:`
+      <table><tr><th>國家</th><th>統治重心</th><th>主要作為</th></tr>
+      <tr><td>荷蘭</td><td>臺南（熱蘭遮城）</td><td>王田制、獎勵漢人開墾、貿易轉口站</td></tr>
+      <tr><td>西班牙</td><td>雞籠、淡水</td><td>以傳教貿易為主，規模較小，1642被荷蘭逐出</td></tr></table>`},
+    {t:"鄭氏治臺時期（1661–1683）", h:`
+      <ul><li><b>鄭成功</b>擊敗荷蘭，改臺灣為「東都」，作為反清復明基地。</li>
+      <li><b>鄭經</b>改「東寧」，行「寓兵於農」<b>屯田制</b>，陳永華建議設學校、行科舉。</li>
+      <li>1683年清將<b>施琅</b>攻臺，鄭克塽投降，臺灣納入清帝國版圖。</li></ul>
+      <div class="callout tip">🔑必考：陳永華＝建孔廟、辦教育、行科舉，人稱「臺灣孔子」。</div>`},
+    {t:"清帝國統治政策演變＋劉銘傳建設", h:`
+      <table><tr><th>階段</th><th>時間</th><th>重點</th></tr>
+      <tr><td>消極治臺</td><td>1683～1860</td><td>渡臺禁令、行政簡單、分類械鬥頻繁</td></tr>
+      <tr><td>開港通商後</td><td>1860～1874</td><td>開放通商口岸，茶糖樟腦外銷</td></tr>
+      <tr><td>積極治臺</td><td>1874～1895</td><td>開山撫番、1885建省，劉銘傳推洋務新政</td></tr></table>
+      <ul><li>劉銘傳：興建<b>基隆—新竹鐵路</b>、架電報線、清查田賦、設西學堂。</li></ul>`},
+    {t:"重要事件比較", h:`
+      <table><tr><th>事件</th><th>年代</th><th>影響</th></tr>
+      <tr><td>牡丹社事件</td><td>1874</td><td>促成清廷開山撫番、積極治臺</td></tr>
+      <tr><td>中法戰爭</td><td>1884〜85</td><td>促成臺灣建省（1885）</td></tr>
+      <tr><td>甲午戰爭</td><td>1894〜95</td><td>戰敗簽<b>馬關條約</b>，割讓臺灣</td></tr></table>
+      <div class="callout warn">⚠️牡丹社事件促成「建省背景」，甲午戰爭才是導致「割臺」的原因，順序勿顛倒。</div>`},
+    {t:"日本殖民統治三階段", h:`
+      <table><tr><th>階段</th><th>重點</th></tr>
+      <tr><td>1895–1919 武力鎮壓</td><td>總督由軍人擔任，武力鎮壓抗日</td></tr>
+      <tr><td>1919–1937 內地延長</td><td>改派文官總督，社會運動興起</td></tr>
+      <tr><td>1937–1945 皇民化</td><td>推行說日語、改姓名，戰時徵兵</td></tr></table>`},
+    {t:"社會與政治運動", h:`
+      <table><tr><th>事件</th><th>人物</th><th>訴求</th></tr>
+      <tr><td>臺灣議會設置請願運動</td><td>林獻堂</td><td>爭取設置民選議會，前後請願15次</td></tr>
+      <tr><td>臺灣文化協會</td><td>蔣渭水、林獻堂</td><td>講習會、讀報社，啟發民智</td></tr></table>
+      <div class="callout tip">🔑蔣渭水有「臺灣新文化運動之父」之稱。</div>`}
+  ],
+  advanced:[
+    {t:"政權統治全面比較表", h:`
+      <table><tr><th>面向</th><th>荷蘭</th><th>西班牙</th><th>鄭氏</th><th>清</th><th>日</th></tr>
+      <tr><td>年代</td><td>1624–62</td><td>1626–42</td><td>1661–83</td><td>1683–1895</td><td>1895–1945</td></tr>
+      <tr><td>重心</td><td>臺南</td><td>雞籠淡水</td><td>臺南</td><td>全臺</td><td>臺北</td></tr>
+      <tr><td>結束原因</td><td>鄭成功攻臺</td><td>被荷蘭逐出</td><td>施琅攻臺</td><td>馬關條約割臺</td><td>二戰投降</td></tr></table>
+      <div class="callout fix">🛠常見錯誤更正：<b>西班牙（共16年）遠短於荷蘭（共38年）</b>，且是被荷蘭趕走，不是自己撤退。</div>`},
+    {t:"渡臺禁令與行政區劃演變", h:`
+      <ul><li>渡臺禁令三限制：須申請許可、不准攜眷、粵民限制更嚴。</li>
+      <li>造成「有唐山公、無唐山媽」現象，早期移民與平埔族通婚。</li></ul>
+      <p><b>行政區劃：</b>1684 一府三縣 → 1875 二府八縣四廳 → 1885 福建臺灣省</p>
+      <div class="callout warn">⚠️情境應用：「清代前期因祖籍不同發生武力衝突」→對應「分類械鬥」，非牡丹社事件。</div>`},
+    {t:"日治時期的路線分裂", h:`
+      <table><tr><th>團體</th><th>人物</th><th>主張</th></tr>
+      <tr><td>文協（右派）</td><td>林獻堂、蔡培火</td><td>持續議會請願，體制內合法抗爭</td></tr>
+      <tr><td>文協（左派）</td><td>連溫卿、王敏川</td><td>1927年改組後掌握協會，路線激進</td></tr>
+      <tr><td>臺灣民眾黨</td><td>蔣渭水</td><td>右派另組，臺灣第一個合法政黨</td></tr>
+      <tr><td>臺灣地方自治聯盟</td><td>楊肇嘉</td><td>訴求溫和，推動地方自治選舉</td></tr></table>
+      <div class="callout fix">🛠常見錯誤更正：1927年分裂後，<b>右派另組臺灣民眾黨，左派保留原文協</b>，兩者不是同一團體。</div>`},
+    {t:"跨時期經濟作物比較", h:`
+      <table><tr><th>時期</th><th>主要輸出品</th><th>特色</th></tr>
+      <tr><td>荷蘭</td><td>鹿皮、蔗糖</td><td>對日鹿皮貿易興盛</td></tr>
+      <tr><td>清開港後</td><td>茶、糖、樟腦</td><td>帶動北部崛起，改變南重北輕格局</td></tr>
+      <tr><td>日治</td><td>蔗糖、蓬萊米</td><td>「工業日本、農業臺灣」</td></tr></table>
+      <div class="callout tip">跨單元整合：北部崛起正是劉銘傳選擇北部建設（基隆—新竹鐵路）的背景。</div>`}
+  ]
+},
+geography:{
+  label:"地理", icon:"🗺️", key:"geography",
+  basic:[
+    {t:"臺灣的位置與範圍", h:`
+      <ul><li>經緯度：東經120°〜122°、北緯22°〜25°，北迴歸線通過嘉義、花蓮。</li>
+      <li>位居<b>東亞島弧中央</b>，是東北亞、東南亞海運要衝。</li>
+      <li>範圍：本島＋澎湖、金門、馬祖及其他附屬島嶼。</li></ul>`},
+    {t:"臺灣的地形", h:`
+      <p>山地32% + 丘陵台地31% + 平原盆地37%（山地丘陵合計約三分之二）</p>
+      <table><tr><th>類型</th><th>代表地區</th><th>特色</th></tr>
+      <tr><td>山地</td><td>中央、雪山、玉山、阿里山、海岸山脈</td><td>玉山為最高峰（3952公尺）</td></tr>
+      <tr><td>台地</td><td>桃園、大肚、八卦</td><td>地下水位低，多茶園果園</td></tr>
+      <tr><td>盆地</td><td>臺北、臺中、埔里</td><td>四周高中間低</td></tr>
+      <tr><td>平原</td><td>嘉南平原（最大）、蘭陽、屏東</td><td>農業精華區，人口密集</td></tr></table>`},
+    {t:"臺灣的氣候", h:`
+      <table><tr><th>季節</th><th>季風</th><th>降雨特色</th></tr>
+      <tr><td>冬季</td><td>東北季風</td><td>北部東北部迎風多雨，中南部乾季</td></tr>
+      <tr><td>夏季</td><td>西南季風</td><td>西南部多雨，配合梅雨、午後雷陣雨</td></tr>
+      <tr><td>颱風季</td><td>7〜9月</td><td>豐沛降雨，也常釀災</td></tr></table>`},
+    {t:"水文與土壤", h:`
+      <ul><li>河川特色：<b>坡陡流急、長度短、流域面積小、含沙量大</b>；流量豐枯懸殊需建水庫調節。</li>
+      <li>植被隨海拔升高依序變化：闊葉林→針闊葉混合林→針葉林→高山寒原（垂直分布）。</li></ul>`},
+    {t:"臺灣的人口", h:`
+      <table><tr><th>概念</th><th>說明</th></tr>
+      <tr><td>人口分布不均</td><td>集中西部平原與都會區，東部山地稀少</td></tr>
+      <tr><td>高齡化</td><td>65歲以上占比上升，扶養比增加</td></tr>
+      <tr><td>少子化</td><td>出生率下降，人口成長趨緩甚至負成長</td></tr></table>`},
+    {t:"臺灣的產業發展", h:`
+      <p>光復初期：一級60% 二級25% 三級15%（以農業為主）</p>
+      <p>現今：二級36% 三級62%（服務業比重最高，產業升級電子科技業）</p>
+      <div class="callout tip">路徑：農業社會→輕工業→重化工業→技術密集產業→服務業為主。</div>`}
+  ],
+  advanced:[
+    {t:"地形／氣候精確數據", h:`
+      <table><tr><th>項目</th><th>內容</th></tr>
+      <tr><td>五大山脈</td><td>中央（最長）、雪山（次高）、玉山（最高峰）、阿里山、海岸山脈（唯一在花東縱谷以東）</td></tr>
+      <tr><td>柯本氣候分類</td><td>北部：副熱帶季風氣候（Cwa）；南部：熱帶季風氣候（Aw，乾濕季分明）</td></tr></table>
+      <div class="callout fix">🛠常見錯誤更正：南部並非全年都比北部乾，是<b>乾濕季分明（夏雨冬乾）</b>，夏季西南季風時南部反而多雨。</div>`},
+    {t:"河川易混淆點大更正", h:`
+      <table><tr><th>項目</th><th>正確答案</th></tr>
+      <tr><td>最長河川</td><td><b>濁水溪</b>（約186公里）</td></tr>
+      <tr><td>流域面積最大</td><td><b>高屏溪</b></td></tr></table>
+      <div class="callout warn">⚠️這是地理科最常見陷阱：「最長」與「流域面積最大」是兩條不同的河川！</div>`},
+    {t:"產業與空間分布深化", h:`
+      <table><tr><th>類型</th><th>代表地點</th><th>產業</th></tr>
+      <tr><td>科學園區</td><td>新竹（最早，1980，鄰近清大交大）</td><td>半導體、光電</td></tr>
+      <tr><td>加工出口區</td><td>高雄（全臺第一個，1966）</td><td>勞力密集輕工業</td></tr>
+      <tr><td>傳統工業區</td><td>高雄臨海工業區</td><td>鋼鐵、石化</td></tr></table>`},
+    {t:"地理×歷史跨科整合", h:`
+      <table><tr><th>地理現象</th><th>對應歷史事件</th></tr>
+      <tr><td>臺灣位居東亞航運要衝</td><td>大航海時代荷西競逐</td></tr>
+      <tr><td>北部丘陵適合種茶樟腦</td><td>清領開港後北部崛起</td></tr>
+      <tr><td>南部嘉南平原氣候適合甘蔗</td><td>日治時期會社製糖業集中南部</td></tr></table>`}
+  ]
+},
+civics:{
+  label:"公民", icon:"⚖️", key:"civics",
+  basic:[
+    {t:"自我的成長與探索", h:`
+      <ul><li><b>自我概念</b>：對自己能力、個性、外貌、價值觀的主觀認識，受他人回饋與社會比較影響。</li>
+      <li><b>需求層次理論（馬斯洛）</b>：生理需求→安全需求→愛與隸屬需求→尊重需求→自我實現需求。</li></ul>
+      <div class="callout tip">🔑需求層次由下而上排列順序常考，務必背熟五層順序。</div>`},
+    {t:"人際關係與家庭生活", h:`
+      <table><tr><th>家庭功能</th><th>說明</th></tr>
+      <tr><td>生育與保護</td><td>撫養子女、提供安全環境</td></tr>
+      <tr><td>教育</td><td>傳遞價值觀、社會規範</td></tr>
+      <tr><td>情感支持</td><td>提供愛與歸屬感</td></tr></table>
+      <div class="callout warn">⚠️核心家庭≠小家庭的唯一型態，單親、頂客家庭也屬於「小家庭」的一種。</div>`},
+    {t:"社會團體與校園生活", h:`
+      <table><tr><th>分類</th><th>類型</th><th>範例</th></tr>
+      <tr><td>接觸方式</td><td>初級團體（面對面、情感親密）</td><td>家庭、班級、密友圈</td></tr>
+      <tr><td>接觸方式</td><td>次級團體（目標取向）</td><td>學校、公司</td></tr></table>
+      <ul><li><b>社會化</b>：透過家庭、學校、同儕、大眾傳播學習社會規範的過程。</li></ul>`},
+    {t:"傳播媒體與生活", h:`
+      <ul><li>大眾傳播媒體具有<b>傳遞資訊、教育、娛樂、監督社會</b>等功能。</li>
+      <li><b>媒體識讀</b>：學習分辨資訊真偽、覺察媒體立場，是重要的公民能力。</li></ul>`},
+    {t:"法律的基本概念", h:`
+      <p><b>法律位階：</b>憲法 &gt; 法律 &gt; 命令 &gt; 地方自治法規（下位不得牴觸上位）</p>
+      <table><tr><th>規範</th><th>制裁方式</th><th>範例</th></tr>
+      <tr><td>法律</td><td>刑罰、罰鍰</td><td>不得竊盜</td></tr>
+      <tr><td>道德</td><td>良心譴責</td><td>孝順父母</td></tr>
+      <tr><td>習俗</td><td>社會排斥</td><td>過年包紅包</td></tr></table>`},
+    {t:"行為能力與責任年齡（基礎）", h:`
+      <ul><li><b>刑事責任：</b>未滿14歲不罰；14歲以上未滿18歲得減輕其刑。</li>
+      <li><b>民事行為能力：</b>未滿7歲無行為能力；7〜18歲為限制行為能力人，須法定代理人同意。</li></ul>`},
+    {t:"消費者保護與少年事件（基礎）", h:`
+      <ul><li>網路購物享有法定<b>七天猶豫期</b>（鑑賞期，非試用期）。</li>
+      <li>未成年人觸法行為，處理上以「教育輔導」為優先。</li></ul>
+      <div class="callout warn">⚠️七天「鑑賞期」不是「試用期」，商品應保持完整狀態。</div>`}
+  ],
+  advanced:[
+    {t:"行為能力與法律效力進階", h:`
+      <table><tr><th>年齡</th><th>民事行為能力</th><th>刑事責任能力</th></tr>
+      <tr><td>未滿7歲</td><td>無行為能力</td><td>無責任能力</td></tr>
+      <tr><td>7〜未滿18歲</td><td>限制行為能力</td><td>未滿14不罰／14〜18減輕</td></tr>
+      <tr><td>滿18歲</td><td>完全行為能力（2023年起下修為18歲）</td><td>完全責任能力</td></tr></table>
+      <table><tr><th>效力狀態</th><th>意義</th></tr>
+      <tr><td>無效</td><td>自始、當然、確定不生效力</td></tr>
+      <tr><td>效力未定</td><td>是否生效取決於法定代理人事後是否承認</td></tr>
+      <tr><td>得撤銷</td><td>本來有效，但因意思表示有瑕疵，當事人可主張撤銷</td></tr></table>
+      <div class="callout fix">🛠常見錯誤更正：<b>無效＝完全不會生效；效力未定＝有機會補正生效</b>，這是A段情境題最常出的陷阱。</div>`},
+    {t:"少年事件處理法進階", h:`
+      <table><tr><th>類型</th><th>定義</th><th>處理方式</th></tr>
+      <tr><td>觸法少年</td><td>未滿14歲，有觸犯刑罰法律行為</td><td>因未達刑事責任年齡不罰，走少年保護事件</td></tr>
+      <tr><td>曝險少年</td><td>雖未觸法，但有觸法之虞（如經常逃學逃家）</td><td>經評估後給予輔導、轉介福利服務</td></tr></table>
+      <div class="callout warn">⚠️情境應用：「未滿14歲學生偷竊」→觸法少年；「經常逃家、深夜遊蕩」→屬於曝險行為，重點在輔導介入。</div>`},
+    {t:"消費者權益進階", h:`
+      <ul><li><b>定型化契約</b>：企業預先擬定的契約條款，若顯失公平，該部分條款可能無效。</li>
+      <li><b>網路交易應記載事項</b>：業者應清楚告知規格、價格、退換貨方式，保障消費者知的權利。</li></ul>`},
+    {t:"傳播媒體識讀進階", h:`
+      <ul><li><b>假訊息辨識</b>：查證消息來源、交叉比對，避免僅因轉傳次數多就相信。</li>
+      <li><b>社群媒體風險</b>：個資外洩、網路霸凌、過度使用影響人際關係。</li></ul>
+      <div class="callout tip">重要觀念：媒體識讀核心不是拒絕使用媒體，而是培養批判思考與自我保護能力。</div>`}
+  ]
+}
+};
+
+/* ============================================================
+   測驗資料
+   ============================================================ */
+const QUIZZES = {
+history_basic:[
+  {q:"臺灣哪個史前文化最早出現？", o:["長濱文化","大坌坑文化","十三行文化","卑南文化"], a:0, e:"長濱文化屬舊石器時代，是目前所知臺灣最早的史前文化。"},
+  {q:"哪個文化以使用鐵器、並與外界有貿易往來著稱？", o:["長濱文化","圓山文化","十三行文化","大坌坑文化"], a:2, e:"十三行文化屬金屬器時代，會煉鐵並與東南亞、中國有貿易往來。"},
+  {q:"荷蘭在臺統治的重心位於？", o:["臺南","淡水","雞籠","臺中"], a:0, e:"荷蘭以臺南（熱蘭遮城、普羅民遮城）為統治中心。"},
+  {q:"陳永華在鄭氏時期的主要貢獻是？", o:["建孔廟、辦教育、行科舉","興建鐵路","開山撫番","推動議會請願"], a:0, e:"陳永華建議設學校、行科舉，人稱「臺灣孔子」。"},
+  {q:"促成臺灣建省（1885年）的關鍵事件是？", o:["甲午戰爭","中法戰爭","牡丹社事件","西來庵事件"], a:1, e:"中法戰爭期間法軍進犯基隆、澎湖，促成清廷於1885年將臺灣建省。"},
+  {q:"推動臺灣議會設置請願運動的關鍵人物是？", o:["蔣渭水","林獻堂","連溫卿","楊肇嘉"], a:1, e:"林獻堂領導臺灣議會設置請願運動，前後請願15次。"}
+],
+history_advanced:[
+  {q:"西班牙統治北臺灣的時間長度約為？", o:["16年","38年","50年","22年"], a:0, e:"西班牙統治1626–1642年，共16年，遠短於荷蘭的38年。"},
+  {q:"荷蘭在臺統治結束的原因是？", o:["鄭成功攻臺","施琅攻臺","日本出兵","清軍入臺"], a:0, e:"1662年鄭成功擊敗荷蘭東印度公司，結束荷蘭統治。"},
+  {q:"1927年臺灣文化協會分裂後，右派另組的政黨是？", o:["臺灣民眾黨","臺灣共產黨","臺灣地方自治聯盟","臺灣同化會"], a:0, e:"右派由蔣渭水領導另組臺灣民眾黨，是臺灣第一個合法政黨；左派則保留原文協。"},
+  {q:"清領時期「二府八縣四廳」的行政區劃出現於？", o:["1684年","1875年","1885年","1895年"], a:1, e:"1875年因應開山撫番，行政區劃調整為二府八縣四廳。"},
+  {q:"清領開港通商後，帶動北部經濟崛起的三大出口作物是？", o:["茶、糖、樟腦","稻米、甘蔗、鹿皮","樟腦、鹿皮、稻米","茶、稻米、甘蔗"], a:0, e:"茶（大稻埕）、糖、樟腦合稱「三大出口」，帶動北部崛起。"},
+  {q:"渡臺禁令造成「有唐山公、無唐山媽」現象，主要是指？", o:["早期移民多為男性，與平埔族女性通婚","移民全為女性","嚴禁所有人移民","只有官員能移民"], a:0, e:"渡臺禁令規定移民不准攜眷，導致早期移民多為單身男性，與平埔族通婚。"}
+],
+geography_basic:[
+  {q:"臺灣山地、丘陵、台地合計約占全島面積比例為？", o:["約十分之一","約三分之一","約三分之二","幾乎全部"], a:2, e:"山地32%＋丘陵台地31%，合計約63%，接近三分之二。"},
+  {q:"臺灣最高峰是？", o:["雪山","玉山","北大武山","合歡山"], a:1, e:"玉山海拔3952公尺，是臺灣及東北亞最高峰。"},
+  {q:"冬季東北季風為臺灣哪個區域帶來較多雨量？", o:["西南部","北部、東北部","中部","恆春半島西側"], a:1, e:"東北季風的迎風面為北部、東北部，冬季降雨較多。"},
+  {q:"下列何者不是臺灣河川的共同特色？", o:["坡陡流急","流域面積大","長度短","含沙量大"], a:1, e:"臺灣河川因地形陡峭、腹地小，流域面積普遍偏小，並非大。"},
+  {q:"臺灣面積最大的平原是？", o:["蘭陽平原","屏東平原","嘉南平原","臺北盆地"], a:2, e:"嘉南平原為臺灣面積最大的平原，是農業精華區。"},
+  {q:"臺灣目前人口結構面臨的主要挑戰是？", o:["人口過度年輕化","少子化與高齡化","人口大量移入","人口分布均勻"], a:1, e:"出生率下降、老年人口比例上升，形成少子化與高齡化並存的挑戰。"}
+],
+geography_advanced:[
+  {q:"臺灣最長的河川是？", o:["高屏溪","濁水溪","淡水河","大甲溪"], a:1, e:"濁水溪全長約186公里，是臺灣最長的河川。"},
+  {q:"臺灣流域面積最大的河川是？", o:["高屏溪","濁水溪","大肚溪","蘭陽溪"], a:0, e:"高屏溪流域面積為全臺最大，常與「最長河川」濁水溪混淆，需特別注意。"},
+  {q:"臺灣南部的柯本氣候分類屬於？", o:["副熱帶季風氣候（Cwa）","熱帶季風氣候（Aw）","溫帶海洋性氣候","地中海型氣候"], a:1, e:"南部乾濕季分明，屬熱帶季風氣候（Aw）；北部則屬副熱帶季風氣候（Cwa）。"},
+  {q:"全臺第一個加工出口區設立於哪裡？", o:["高雄","新竹","臺中","臺南"], a:0, e:"高雄加工出口區於1966年設立，是全臺第一個加工出口區。"},
+  {q:"新竹科學園區發展半導體產業的重要區位因素是？", o:["鄰近清華大學與交通大學","鄰近臺灣大學","鄰近港口","地價最便宜"], a:0, e:"科學園區高度依賴鄰近大學與研究機構提供的技術人才與知識支援。"},
+  {q:"日治時期會社製糖業集中於哪個區域，與其氣候地形密切相關？", o:["北部臺北盆地","南部嘉南平原","東部花東縱谷","中部臺中盆地"], a:1, e:"南部嘉南平原氣候溫暖、地勢平坦，適合甘蔗生長，帶動製糖業集中於此。"}
+],
+civics_basic:[
+  {q:"馬斯洛需求層次理論由低到高，最先被滿足的需求是？", o:["自我實現需求","安全需求","生理需求","尊重需求"], a:2, e:"需求層次由下而上依序為：生理→安全→愛與隸屬→尊重→自我實現。"},
+  {q:"下列何者不是家庭的主要功能？", o:["生育與保護","經濟","立法","情感支持"], a:2, e:"立法是政府機關的職權，不屬於家庭的功能。"},
+  {q:"依接觸方式分類，「班級」屬於？", o:["初級團體","次級團體","正式團體專屬","非正式團體專屬"], a:0, e:"班級成員面對面互動、情感較親密，屬於初級團體。"},
+  {q:"我國法律位階由高至低排列，下列何者正確？", o:["法律＞憲法＞命令＞地方自治法規","憲法＞法律＞命令＞地方自治法規","命令＞法律＞憲法＞地方自治法規","憲法＞命令＞法律＞地方自治法規"], a:1, e:"法律位階：憲法＞法律＞命令＞地方自治法規，下位不得牴觸上位。"},
+  {q:"未滿14歲之人觸犯刑罰法律，依刑法規定？", o:["不罰","得減輕其刑","罰鍰","須入獄"], a:0, e:"未滿14歲屬無刑事責任能力，依法不罰，改依少年保護事件處理。"},
+  {q:"網路購物的七天猶豫期又稱為？", o:["試用期","鑑賞期","保固期","免責期"], a:1, e:"七天猶豫期又稱鑑賞期，目的在讓消費者檢視商品，並非試用期。"}
+],
+civics_advanced:[
+  {q:"未滿7歲之人單獨簽訂的契約，效力為？", o:["有效","效力未定","無效","得撤銷"], a:2, e:"未滿7歲屬無行為能力人，其法律行為自始、當然、確定不生效力（無效）。"},
+  {q:"限制行為能力人（7〜未滿18歲）未經法定代理人允許簽訂的較大額契約，效力為？", o:["無效","效力未定","有效","得撤銷"], a:1, e:"效力未定：是否生效取決於法定代理人事後是否承認。"},
+  {q:"依現行民法規定，完全行為能力的年齡自2023年起為？", o:["16歲","18歲","20歲","22歲"], a:1, e:"民法成年年齡自2023年1月1日起由20歲下修為18歲。"},
+  {q:"「未滿14歲，已有觸犯刑罰法律行為」的少年稱為？", o:["曝險少年","觸法少年","限制行為能力人","累犯少年"], a:1, e:"觸法少年指未滿14歲、已有觸犯刑罰法律行為者，因未達刑事責任年齡不罰。"},
+  {q:"「經常逃學逃家、無正當理由攜帶危險器械」但尚未觸法的少年稱為？", o:["觸法少年","曝險少年","更生少年","限制行為能力人"], a:1, e:"曝險少年指雖未觸法，但有觸法之虞，經評估後給予輔導或轉介福利服務。"},
+  {q:"定型化契約中，若條款顯失公平，該部分條款的效力為？", o:["一律有效","可能無效","自動使契約全部無效","需雙方另立新約"], a:1, e:"定型化契約中顯失公平的條款，該部分條款可能被認定無效，其餘部分仍可能有效。"}
+]
+};
+
+/* ============================================================
+   應用狀態與渲染
+   ============================================================ */
+const state = {
+  view:"home",          // home | review | quiz | quizresult
+  subject:"history",
+  level:"basic",
+  quizKey:null,
+  quizQs:[],
+  quizIdx:0,
+  quizAnswers:[],        // per question: null | {picked, correct}
+  progress:{}            // key -> {correct,total}
+};
+
+const SUBJECT_ORDER = ["history","geography","civics"];
+const ACCENT = { history:"var(--hist)", geography:"var(--geo)", civics:"var(--civ)" };
+const ACCENT_SOFT = { history:"var(--hist-soft)", geography:"var(--geo-soft)", civics:"var(--civ-soft)" };
+
+function progressKey(subj, level){ return subj+"_"+level; }
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+function startQuiz(subj, level){
+  const key = progressKey(subj, level);
+  state.view="quiz"; state.subject=subj; state.level=level; state.quizKey=key;
+  state.quizQs = QUIZZES[key].map(q=>({...q}));
+  state.quizIdx = 0;
+  state.quizAnswers = new Array(state.quizQs.length).fill(null);
+  render();
+}
+
+function startChallenge(){
+  let pool = [];
+  Object.keys(QUIZZES).forEach(k=>{
+    QUIZZES[k].forEach(q=> pool.push({...q, srcKey:k}));
+  });
+  pool = shuffle(pool).slice(0,10);
+  state.view="quiz"; state.quizKey="__challenge__";
+  state.quizQs = pool; state.quizIdx = 0;
+  state.quizAnswers = new Array(pool.length).fill(null);
+  render();
+}
+
+function pickAnswer(optIdx){
+  const q = state.quizQs[state.quizIdx];
+  if(state.quizAnswers[state.quizIdx]) return; // already answered
+  state.quizAnswers[state.quizIdx] = { picked:optIdx, correct: optIdx===q.a };
+  render();
+}
+
+function nextQuestion(){
+  if(state.quizIdx < state.quizQs.length-1){
+    state.quizIdx++;
+    render();
+  } else {
+    // finish quiz -> record progress (only for non-challenge)
+    const correctCount = state.quizAnswers.filter(x=>x && x.correct).length;
+    if(state.quizKey !== "__challenge__"){
+      const prev = state.progress[state.quizKey];
+      if(!prev || correctCount > prev.correct){
+        state.progress[state.quizKey] = { correct: correctCount, total: state.quizQs.length };
+      }
+    }
+    state.view = "quizresult";
+    state.lastScore = { correct: correctCount, total: state.quizQs.length };
+    render();
+  }
+}
+
+function goHome(){ state.view="home"; render(); }
+function goReview(subj, level){ state.view="review"; state.subject=subj; state.level=level; render(); }
+function setSubject(s){ state.subject=s; if(state.view==="home") state.view="review"; render(); }
+function setLevel(l){ state.level=l; render(); }
+
+/* ---------- Render functions ---------- */
+function render(){
+  const app = document.getElementById("app");
+  app.innerHTML = topBarHTML() + `<div class="layout">` + railHTML() + `<div class="main">` + mainHTML() + `</div></div>` + footerHTML();
+  bindEvents();
+  document.documentElement.style.setProperty('--accent', ACCENT[state.subject] || 'var(--hist)');
+  document.documentElement.style.setProperty('--accent-soft', ACCENT_SOFT[state.subject] || 'var(--hist-soft)');
+}
+
+function totalProgressDots(subj){
+  const b = state.progress[progressKey(subj,"basic")];
+  const a = state.progress[progressKey(subj,"advanced")];
+  const bOn = b ? Math.round((b.correct/b.total)*3) : 0;
+  const aOn = a ? Math.round((a.correct/a.total)*3) : 0;
+  return {bOn, aOn};
+}
+
+function topBarHTML(){
+  const dashes = SUBJECT_ORDER.map(s=>{
+    const c = CONTENT[s];
+    const {bOn,aOn} = totalProgressDots(s);
+    const color = s==="history" ? "#7A3B2E" : s==="geography" ? "#1F5C3A" : "#1F4A7A";
+    let dotsHtml = "";
+    for(let i=0;i<3;i++) dotsHtml += `<span class="pd-dot ${i<bOn?'on':''}" style="--dotcolor:${color}"></span>`;
+    dotsHtml += `<span style="width:4px;"></span>`;
+    for(let i=0;i<3;i++) dotsHtml += `<span class="pd-dot ${i<aOn?'on':''}" style="--dotcolor:${color}"></span>`;
+    return `<div class="pd-item">${c.icon} ${c.label} <span class="dots">${dotsHtml}</span></div>`;
+  }).join("");
+  return `
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark">會</div>
+      <div>
+        <div class="ttl">會考社會科複習站</div>
+        <div class="sub">第一、二冊｜歷史・地理・公民｜基礎＋進階</div>
+      </div>
+    </div>
+    <div class="progress-dash">${dashes}</div>
+  </div>`;
+}
+
+function railHTML(){
+  const tabs = SUBJECT_ORDER.map(s=>{
+    const c = CONTENT[s];
+    const active = state.subject===s ? "active":"";
+    const {bOn,aOn} = totalProgressDots(s);
+    const done = bOn===3 && aOn===3 ? "✓" : "";
+    return `<button class="tab ${active}" data-subj="${s}" data-action="subject">
+      <span class="ic">${c.icon}</span> ${c.label} <span class="badge">${done||((bOn+aOn)+"/6")}</span>
+    </button>`;
+  }).join("");
+
+  let panel = "";
+  if(state.view!=="home"){
+    panel = `
+    <div class="rail-panel">
+      <h4>難度</h4>
+      <div class="level-switch">
+        <button data-action="level" data-level="basic" class="${state.level==='basic'?'active':''}">基礎</button>
+        <button data-action="level" data-level="advanced" class="${state.level==='advanced'?'active':''}">進階</button>
+      </div>
+      <h4>模式</h4>
+      <div class="mode-switch">
+        <button data-action="mode" data-mode="review" class="${state.view==='review'?'active':''}">📖 重點複習</button>
+        <button data-action="mode" data-mode="quiz" class="${state.view==='quiz'||state.view==='quizresult'?'active':''}">📝 小測驗</button>
+      </div>
+      <button class="challenge-btn" data-action="challenge">🎲 綜合挑戰（10題隨機）</button>
+    </div>`;
+  } else {
+    panel = `
+    <div class="rail-panel">
+      <h4>快速開始</h4>
+      <button class="challenge-btn" data-action="challenge">🎲 綜合挑戰（10題隨機）</button>
+    </div>`;
+  }
+
+  return `<div class="rail">${tabs}${panel}</div>`;
+}
+
+function mainHTML(){
+  if(state.view==="home") return homeHTML();
+  if(state.view==="review") return reviewHTML();
+  if(state.view==="quiz") return quizHTML();
+  if(state.view==="quizresult") return quizResultHTML();
+  return "";
+}
+
+function homeHTML(){
+  const cards = SUBJECT_ORDER.map(s=>{
+    const c = CONTENT[s];
+    const cls = s==="history"?"hist":s==="geography"?"geo":"civ";
+    return `<button class="home-card ${cls}" data-action="gohome-subject" data-subj="${s}">
+      <div class="hc-ic">${c.icon}</div>
+      <div class="hc-ttl">${c.label}篇</div>
+      <div class="hc-desc">基礎 ${c.basic.length} 主題・進階 ${c.advanced.length} 主題</div>
+    </button>`;
+  }).join("");
+  return `
+  <div class="home-hero">
+    <h1>掌握觀念，懂得運用</h1>
+    <p>本站涵蓋國中教育會考社會科第一、二冊範圍，分成「基礎篇」與「進階篇」。左側選擇科目與難度，右側切換「重點複習」或「小測驗」；答錯不扣分，重點是搞懂觀念與情境判斷。準備好了嗎？</p>
+    <div class="home-grid">${cards}</div>
+  </div>`;
+}
+
+function reviewHTML(){
+  const c = CONTENT[state.subject];
+  const topics = c[state.level];
+  const levelLabel = state.level==="basic" ? "基礎" : "進階";
+  const items = topics.map((t,i)=>`
+    <details class="topic" ${i===0?"open":""}>
+      <summary><span class="num">${i+1}</span> ${t.t} <span class="chev">▾</span></summary>
+      <div class="body">${t.h}</div>
+    </details>`).join("");
+  return `
+  <div class="section-head">
+    <h2>${c.icon} ${c.label}篇 － ${levelLabel}</h2>
+    <span class="tag">${topics.length} 個主題</span>
+  </div>
+  ${items}`;
+}
+
+function quizHTML(){
+  const q = state.quizQs[state.quizIdx];
+  const answered = state.quizAnswers[state.quizIdx];
+  const letters = ["A","B","C","D"];
+  const isChallenge = state.quizKey === "__challenge__";
+  const levelTag = isChallenge ? (q.srcKey && q.srcKey.includes("advanced") ? "進階" : "基礎") : (state.level==="basic"?"基礎":"進階");
+
+  const bubbles = state.quizQs.map((_,i)=>{
+    const ans = state.quizAnswers[i];
+    let cls = i===state.quizIdx ? "current" : "";
+    if(ans) cls = ans.correct ? "correct" : "wrong";
+    return `<div class="bubble ${cls}">${i+1}</div>`;
+  }).join("");
+
+  const opts = q.o.map((opt,i)=>{
+    let cls="opt";
+    if(answered){
+      cls += " locked";
+      if(i===q.a) cls += " correct-answer";
+      else if(i===answered.picked) cls += " wrong-answer";
+    }
+    return `<button class="${cls}" data-action="pick" data-idx="${i}" ${answered?"disabled":""}>
+      <span class="letter">${letters[i]}</span> ${opt}
+    </button>`;
+  }).join("");
+
+  const explain = answered ? `<div class="explain-box">
+      <b>${answered.correct ? "✅ 答對了！" : "❌ 再想想～"}</b><br>${q.e}
+    </div>` : "";
+
+  const title = isChallenge ? "🎲 綜合挑戰" : `${CONTENT[state.subject].icon} ${CONTENT[state.subject].label}篇 小測驗`;
+
+  return `
+  <div class="quiz-wrap">
+    <div class="quiz-top">
+      <div>
+        <div style="font-weight:700; font-size:15px;">${title}</div>
+        <div class="qcount">第 ${state.quizIdx+1} / ${state.quizQs.length} 題</div>
+      </div>
+      <div class="bubble-row">${bubbles}</div>
+    </div>
+    <div class="q-card">
+      <span class="q-level">${levelTag}</span>
+      <h3>${q.q}</h3>
+      <div class="opt-list">${opts}</div>
+      ${explain}
+    </div>
+    <div class="quiz-actions">
+      <button class="btn-primary" data-action="next" ${answered?"":"disabled"}>${state.quizIdx===state.quizQs.length-1?"完成測驗":"下一題"}</button>
+    </div>
+  </div>`;
+}
+
+function quizResultHTML(){
+  const { correct, total } = state.lastScore;
+  const pct = Math.round((correct/total)*100);
+  let msg = "再複習一下重點，你可以更好！";
+  if(pct>=80) msg = "非常穩定，你已經抓到訣竅了！";
+  else if(pct>=60) msg = "掌握得不錯，再加強易混淆的部分！";
+  return `
+  <div class="quiz-wrap quiz-result">
+    <div style="font-size:13px; color:var(--ink-soft); font-weight:700;">測驗結果</div>
+    <div class="score">${correct} / ${total}</div>
+    <div class="msg">${msg}</div>
+    <div class="result-actions">
+      <button class="btn-ghost" data-action="backreview">📖 回去複習重點</button>
+      <button class="btn-primary" data-action="retry">🔁 再測一次</button>
+    </div>
+  </div>`;
+}
+
+function footerHTML(){
+  return `<footer>國中會考社會科複習站｜範圍：第一、二冊（七年級）｜基礎篇打底、進階篇拿高分</footer>`;
+}
+
+/* ---------- Event binding ---------- */
+function bindEvents(){
+  document.querySelectorAll('[data-action="subject"]').forEach(el=>{
+    el.addEventListener('click', ()=> setSubject(el.dataset.subj));
+  });
+  document.querySelectorAll('[data-action="gohome-subject"]').forEach(el=>{
+    el.addEventListener('click', ()=> goReview(el.dataset.subj, "basic"));
+  });
+  document.querySelectorAll('[data-action="level"]').forEach(el=>{
+    el.addEventListener('click', ()=> setLevel(el.dataset.level));
+  });
+  document.querySelectorAll('[data-action="mode"]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      if(el.dataset.mode==="review") goReview(state.subject, state.level);
+      else startQuiz(state.subject, state.level);
+    });
+  });
+  document.querySelectorAll('[data-action="challenge"]').forEach(el=>{
+    el.addEventListener('click', startChallenge);
+  });
+  document.querySelectorAll('[data-action="pick"]').forEach(el=>{
+    el.addEventListener('click', ()=> pickAnswer(parseInt(el.dataset.idx)));
+  });
+  const nextBtn = document.querySelector('[data-action="next"]');
+  if(nextBtn) nextBtn.addEventListener('click', nextQuestion);
+  const retryBtn = document.querySelector('[data-action="retry"]');
+  if(retryBtn) retryBtn.addEventListener('click', ()=> startQuiz(state.subject, state.level));
+  const backBtn = document.querySelector('[data-action="backreview"]');
+  if(backBtn) backBtn.addEventListener('click', ()=> goReview(state.subject, state.level));
+}
+
+render();
+</script>
+</body>
+</html>
